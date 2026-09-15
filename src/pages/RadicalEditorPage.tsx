@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { Save, Trash2, RefreshCw, Pen, Square, Circle, Eraser, Plus, X } from 'lucide-react';
 import { useWritingSystemStore } from '@/store/useWritingSystemStore';
 import { ShapeRenderer } from '@/components/GlyphRenderer';
+import { TransformConsole } from '@/components/TransformConsole';
 import { CATEGORY_OPTIONS } from '@/utils/glyphUtils';
 import type { Radical, GlyphVariant, RadicalCategory } from '@/types';
 
@@ -70,6 +71,17 @@ export const RadicalEditorPage: React.FC = () => {
     if (drawingTarget === 'base') return currentBasePath;
     const v = variants.find((v) => v.stageId === drawingTarget);
     return v?.svgPath || '';
+  };
+
+  const targetStage = stages.find((s) => s.id === drawingTarget);
+  const transformTargetLabel = drawingTarget === 'base' ? '基础形状' : `${targetStage?.name ?? ''}变体`;
+  const transformAccent = drawingTarget === 'base' ? '#3E2723' : (targetStage?.color ?? '#3E2723');
+
+  // 变换台确认后只写回当前目标，其他阶段变体与基础形状保持原样
+  const handleApplyTransform = (newPath: string) => {
+    pathsRef.current = newPath ? [newPath] : [];
+    setTempPath('');
+    setCurrentPathValue(newPath);
   };
 
   const setCurrentPathValue = (path: string) => {
@@ -462,6 +474,14 @@ export const RadicalEditorPage: React.FC = () => {
               </div>
             </div>
           </div>
+
+          <TransformConsole
+            target={drawingTarget}
+            targetLabel={transformTargetLabel}
+            sourcePath={getCurrentPathValue()}
+            accentColor={transformAccent}
+            onApply={handleApplyTransform}
+          />
 
           <div className="flex items-center gap-4 justify-end">
             {editingRadical && (
